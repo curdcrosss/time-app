@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Управление правилом</title>
+    <style>
+        :root {
+            --primary-color: #2c3e50;
+            --button-padding: 14px 20px;
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            padding: 20px;
+        }
+
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 0 15px rgba(0,0,0,0.1);
+            width: 100%;
+            max-width: 500px;
+        }
+
+        #timer {
+            font-size: 3em;
+            text-align: center;
+            margin: 25px 0;
+            color: #333;
+        }
+
+        .button-group {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        #enableRule {
+            background: #28a745 !important;
+            padding: 15px 30px;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        #disableRule {
+            background: #dc3545 !important;
+            padding: 15px 30px;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        .status-info {
+            margin-top: 25px;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 8px;
+        }
+
+        @media (max-width: 480px) {
+            .container {
+                padding: 15px;
+            }
+            #timer {
+                font-size: 2.5em;
+            }
+            button {
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1 style="text-align: center; margin-bottom: 20px;">Управление правилом</h1>
+        <div class="status-info">
+            <div id="ruleStatus">Статус: Не активно</div>
+            <div id="lastAction">Последний запуск: не осуществлялся</div>
+        </div>
+        <div id="timer">45:00</div>
+        <div class="button-group">
+            <button id="enableRule">ВКЛЮЧИТЬ</button>
+            <button id="disableRule">ВЫКЛЮЧИТЬ</button>
+        </div>
+    </div>
+
+    <script>
+        let timerInterval;
+        let timeLeft = 45 * 60;
+
+        document.getElementById('enableRule').addEventListener('click', async () => {
+            try {
+                const response = await fetch('/api/start', {
+                    method: 'POST',
+                    credentials: 'include'
+                });
+                if (response.ok) {
+                    startTimer();
+                }
+            } catch (error) {
+                alert('Ошибка сервера');
+            }
+        });
+
+        document.getElementById('disableRule').addEventListener('click', async () => {
+            try {
+                const response = await fetch('/api/stop', {
+                    method: 'POST',
+                    credentials: 'include'
+                });
+                if (response.ok) {
+                    stopTimer();
+                }
+            } catch (error) {
+                alert('Ошибка сервера');
+            }
+        });
+
+        function startTimer() {
+            clearInterval(timerInterval);
+            timeLeft = 45 * 60;
+            updateTimer();
+            timerInterval = setInterval(updateTimer, 1000);
+        }
+
+        function stopTimer() {
+            clearInterval(timerInterval);
+            document.getElementById('timer').textContent = "45:00";
+            document.getElementById('ruleStatus').textContent = "Статус: Не активно";
+        }
+
+        function updateTimer() {
+            timeLeft--;
+            const minutes = Math.floor(timeLeft / 60);
+            const seconds = timeLeft % 60;
+            document.getElementById('timer').textContent = 
+                `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+            
+            if (timeLeft <= 0) {
+                stopTimer();
+                alert('Время вышло!');
+            }
+        }
+    </script>
+</body>
+</html>
